@@ -10,13 +10,12 @@ load_dotenv()
 app = FastAPI(title="TableGrape Agent API")
 
 # CORS
-frontend_origin = os.getenv("FRONTEND_ORIGIN", "http://localhost:3000")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[frontend_origin],
-    allow_credentials=True,
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
+    allow_credentials=False,
 )
 
 # Initialize database on startup

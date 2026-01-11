@@ -273,15 +273,17 @@ export const api = {
   sendChatMessage: async (
     farmId: string,
     message: string,
-    lang?: string
-  ): Promise<{ reply: string }> => {
-    return fetchAPI<{ reply: string }>('/api/chat/message', {
+    lang?: string,
+    sessionId?: string
+  ): Promise<{ reply: string; session_id: string }> => {
+    return fetchAPI<{ reply: string; session_id: string }>('/api/chat/message', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         farm_id: farmId,
+        session_id: sessionId || null,
         message,
         lang,
       }),

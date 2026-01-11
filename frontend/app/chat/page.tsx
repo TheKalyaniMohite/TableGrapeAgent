@@ -21,6 +21,7 @@ export default function ChatPage() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(true);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -33,6 +34,15 @@ export default function ChatPage() {
       router.push('/onboarding/location');
       return;
     }
+    
+    // Load or generate session_id for this farm
+    const sessionKey = `tablegrape_session_${farmId}`;
+    let currentSessionId = localStorage.getItem(sessionKey);
+    if (!currentSessionId) {
+      currentSessionId = crypto.randomUUID();
+      localStorage.setItem(sessionKey, currentSessionId);
+    }
+    setSessionId(currentSessionId);
     
     // Load chat history
     loadHistory();
@@ -96,7 +106,17 @@ export default function ChatPage() {
     setMessages((prev) => [...prev, tempUserMsg]);
 
     try {
-      const response = await api.sendChatMessage(farmId, userMessage, lang);
+      const response = await api.sendChatMessage(farmId, userMessage, lang, sessionId || undefined);
+      
+      // Update session_id if returned from backend (in case it was generated)
+      if (response.session_id && response.session_id !== sessionId) {
+        const farmId = localStorage.getItem('farm_id');
+        if (farmId) {
+          const sessionKey = `tablegrape_session_${farmId}`;
+          localStorage.setItem(sessionKey, response.session_id);
+          setSessionId(response.session_id);
+        }
+      }
       
       // Add assistant reply (keep user message, just add assistant)
       const assistantMsg: ChatMessage = {
@@ -133,18 +153,21 @@ export default function ChatPage() {
     const farmId = localStorage.getItem('farm_id');
     if (!farmId) return;
     
-    try {
-      await api.clearChatHistory(farmId);
-      setMessages([]);
-      setInput('');
-      // Focus input after clearing
-      setTimeout(() => {
-        const inputEl = document.querySelector('input[type="text"]') as HTMLInputElement;
-        inputEl?.focus();
-      }, 100);
-    } catch (err) {
-      console.error('Error clearing chat history:', err);
-    }
+    // Generate new session_id
+    const newSessionId = crypto.randomUUID();
+    const sessionKey = `tablegrape_session_${farmId}`;
+    localStorage.setItem(sessionKey, newSessionId);
+    setSessionId(newSessionId);
+    
+    // Clear messages in UI (don't clear database history - keep it farm-wide)
+    setMessages([]);
+    setInput('');
+    
+    // Focus input after clearing
+    setTimeout(() => {
+      const inputEl = document.querySelector('input[type="text"]') as HTMLInputElement;
+      inputEl?.focus();
+    }, 100);
   };
 
   const suggestions = [

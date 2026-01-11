@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 from app.db import get_db
 from app.models import (
-    Farm, Block, CropStatus, ScoutingLog, IrrigationLog, BrixSample, ChatMessage
+    Farm, Block, CropStatus, ScoutingLog, IrrigationLog, BrixSample, ChatMessage, ChatSession
 )
 from app.schemas import ChatMessageRequest, ChatMessageReply, ChatMessageResponse
 from app.services.weather_service import get_forecast
@@ -11,6 +11,7 @@ from typing import Dict, List, Optional
 import os
 import json
 import logging
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -424,12 +425,31 @@ async def send_message(
     if not farm:
         raise HTTPException(status_code=404, detail="Farm not found")
     
+    # Generate session_id if missing
+    session_id = request.session_id
+    if not session_id:
+        session_id = str(uuid.uuid4())
+        logger.info(f"Chat: Generated new session_id {session_id} for farm {request.farm_id}")
+    
+    # Ensure ChatSession exists
+    session = db.query(ChatSession).filter(ChatSession.id == session_id).first()
+    if not session:
+        session = ChatSession(
+            id=session_id,
+            farm_id=request.farm_id,
+            title=None
+        )
+        db.add(session)
+        db.flush()
+        logger.info(f"Chat: Created new ChatSession {session_id} for farm {request.farm_id}")
+    
     # Use farm's preferred language if lang not provided
     lang = request.lang or farm.preferred_language or "en"
     
     # Save user message first (ensures it gets earlier timestamp/ID)
     user_msg = ChatMessage(
         farm_id=request.farm_id,
+        session_id=session_id,
         role="user",
         content=request.message
     )
@@ -483,6 +503,7 @@ async def send_message(
     # Save assistant reply (after user message is committed)
     assistant_msg = ChatMessage(
         farm_id=request.farm_id,
+        session_id=session_id,
         role="assistant",
         content=reply_text
     )
@@ -491,7 +512,7 @@ async def send_message(
     db.commit()
     db.refresh(assistant_msg)  # Refresh to ensure all fields are populated
     
-    return ChatMessageReply(reply=reply_text)
+    return ChatMessageReply(reply=reply_text, session_id=session_id)
 
 @router.delete("/chat/history")
 async def clear_chat_history(

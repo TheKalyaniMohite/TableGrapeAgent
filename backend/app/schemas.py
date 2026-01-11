@@ -196,9 +196,11 @@ class ChatMessageResponse(BaseModel):
 
 class ChatMessageRequest(BaseModel):
     farm_id: str
+    session_id: Optional[str] = None
     message: str
     lang: Optional[str] = "en"
 
 class ChatMessageReply(BaseModel):
     reply: str
+    session_id: str
 

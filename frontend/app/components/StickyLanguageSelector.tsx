@@ -12,10 +12,12 @@ import CN from 'country-flag-icons/react/3x2/CN';
 import JP from 'country-flag-icons/react/3x2/JP';
 import SA from 'country-flag-icons/react/3x2/SA';
 
+type FlagComponent = React.ComponentType<any>;
+
 interface LanguageOption {
   code: Language;
   label: string;
-  FlagComponent: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  FlagComponent: FlagComponent;
 }
 
 const languages: LanguageOption[] = [

@@ -271,7 +271,6 @@ export default function OnboardingLocationPage() {
             )}
           </div>
         )}
-          </div>
         </div>
       </div>
     </div>

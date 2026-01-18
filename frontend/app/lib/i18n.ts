@@ -1,6 +1,6 @@
 export type Language = 'en' | 'hi' | 'es' | 'mr' | 'fr' | 'de' | 'pt' | 'zh' | 'ja' | 'ar';
 
-export const translations: Record<Language, Record<string, string>> = {
+export const translations: Partial<Record<Language, Record<string, string>>> = {
   en: {
     'app.title': 'AgriSight',
     'setup.title': 'Farm Setup',
@@ -567,20 +567,16 @@ export const translations: Record<Language, Record<string, string>> = {
   },
 };
 
-// Helper function to create placeholder translations (using English)
-function createPlaceholderTranslations(enTranslations: Record<string, string>): Record<string, string> {
-  return { ...enTranslations };
-}
-
-// Add placeholder translations for new languages
-(translations as any).fr = createPlaceholderTranslations(translations.en);
-(translations as any).de = createPlaceholderTranslations(translations.en);
-(translations as any).pt = createPlaceholderTranslations(translations.en);
-(translations as any).zh = createPlaceholderTranslations(translations.en);
-(translations as any).ja = createPlaceholderTranslations(translations.en);
-(translations as any).ar = createPlaceholderTranslations(translations.en);
+// Empty placeholder objects for additional languages (will fall back to English)
+translations.fr = {};
+translations.de = {};
+translations.pt = {};
+translations.zh = {};
+translations.ja = {};
+translations.ar = {};
 
 export function getTranslation(key: string, lang: Language): string {
-  return translations[lang][key] || translations.en[key] || key;
+  // Try selected language first, then fall back to English, then return the key itself
+  return translations[lang]?.[key] ?? translations.en?.[key] ?? key;
 }
 

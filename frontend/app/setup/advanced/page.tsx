@@ -1,11 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { api, GeocodeResult } from '@/app/lib/api';
 import { Language, getTranslation } from '@/app/lib/i18n';
 import Nav from '@/app/components/Nav';
-import LanguageToggle from '@/app/components/LanguageToggle';
 import LocationSearch from '@/app/components/LocationSearch';
 import { addFarmToList } from '@/app/lib/farmStorage';
 
@@ -46,6 +45,20 @@ export default function AdvancedSetupPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    const storedLang = localStorage.getItem('preferred_language') || 'en';
+    setLang(storedLang as Language);
+
+    // Listen for language changes from sticky selector
+    const handleLanguageChange = (e: CustomEvent) => {
+      setLang(e.detail.lang);
+    };
+    window.addEventListener('languageChanged', handleLanguageChange as EventListener);
+    return () => {
+      window.removeEventListener('languageChanged', handleLanguageChange as EventListener);
+    };
+  }, []);
+
   const handleLocationSelect = (location: GeocodeResult) => {
     setSelectedLocation(location);
     setFarmForm({
@@ -59,7 +72,7 @@ export default function AdvancedSetupPage() {
     }
   };
 
-  const handleFarmSubmit = async (e: React.FormEvent) => {
+  const handleFarmSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -111,7 +124,7 @@ export default function AdvancedSetupPage() {
     }
   };
 
-  const handleBlocksSubmit = async (e: React.FormEvent) => {
+  const handleBlocksSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
@@ -156,43 +169,44 @@ export default function AdvancedSetupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-20 sm:pb-8">
       <Nav lang={lang} />
-      <div className="container mx-auto p-8">
+      <div className="container mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 md:py-12">
         <div className="max-w-2xl mx-auto">
-          <div className="mb-4 flex justify-between items-center">
-            <h1 className="text-3xl font-bold text-gray-900">
-              {getTranslation('setup.title', lang)} - {getTranslation('setup.advanced', lang)}
+          <div className="mb-6 sm:mb-10">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2 sm:mb-3 tracking-tight">
+              {getTranslation('setup.title', lang)}
             </h1>
-            <LanguageToggle currentLang={lang} onLanguageChange={setLang} />
+            <p className="text-gray-600 text-sm sm:text-base">{getTranslation('setup.advanced', lang)}</p>
           </div>
 
           {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
               {error}
             </div>
           )}
 
           {step === 'farm' && (
-            <form onSubmit={handleFarmSubmit} className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-2xl font-semibold mb-4 text-gray-900">
+            <form onSubmit={handleFarmSubmit} className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 sm:p-6 md:p-8 mb-4 sm:mb-6">
+              <h2 className="text-base sm:text-lg md:text-xl font-semibold text-gray-900 mb-4 sm:mb-6">
                 {getTranslation('setup.createFarm', lang)}
               </h2>
 
-              <div className="mb-4">
-                <label className="block text-gray-800 font-medium mb-2">
+              <div className="mb-4 sm:mb-6">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                   {getTranslation('setup.farmName', lang)}
                 </label>
                 <input
                   type="text"
                   value={farmForm.name}
                   onChange={(e) => setFarmForm({ ...farmForm, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 placeholder:text-gray-400 caret-gray-900"
+                  className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  placeholder="Enter farm name (optional)"
                 />
               </div>
 
-              <div className="mb-4">
-                <label className="block text-gray-800 font-medium mb-2">
+              <div className="mb-4 sm:mb-6">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                   {getTranslation('setup.cityStateCountry', lang)}
                 </label>
                 <LocationSearch
@@ -209,19 +223,28 @@ export default function AdvancedSetupPage() {
               </div>
 
               {/* Advanced: Manual coordinates */}
-              <div className="mb-4">
+              <div className="mb-4 sm:mb-6">
                 <button
                   type="button"
                   onClick={() => setShowAdvanced(!showAdvanced)}
-                  className="text-sm text-blue-600 hover:text-blue-800 underline"
+                  className="text-xs sm:text-sm text-gray-600 hover:text-green-600 font-medium flex items-center gap-1.5 sm:gap-2 transition-colors"
                 >
-                  {showAdvanced ? '▼' : '▶'} {getTranslation('setup.advancedLocation', lang)}
+                  {showAdvanced ? (
+                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  ) : (
+                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  )}
+                  {getTranslation('setup.advancedLocation', lang)}
                 </button>
                 
                 {showAdvanced && (
-                  <div className="mt-3 p-4 bg-gray-50 rounded-md border border-gray-200">
-                    <div className="mb-3">
-                      <label className="block text-gray-800 font-medium mb-2">
+                  <div className="mt-3 sm:mt-4 p-3 sm:p-4 bg-gray-50 rounded-lg sm:rounded-xl border border-gray-200 space-y-3 sm:space-y-4">
+                    <div>
+                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                         {getTranslation('setup.latitude', lang)}
                       </label>
                       <input
@@ -229,13 +252,13 @@ export default function AdvancedSetupPage() {
                         step="any"
                         value={farmForm.lat}
                         onChange={(e) => setFarmForm({ ...farmForm, lat: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 placeholder:text-gray-400 caret-gray-900"
+                        className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                         placeholder="-90 to 90"
                       />
                     </div>
 
-                    <div className="mb-3">
-                      <label className="block text-gray-800 font-medium mb-2">
+                    <div>
+                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                         {getTranslation('setup.longitude', lang)}
                       </label>
                       <input
@@ -243,7 +266,7 @@ export default function AdvancedSetupPage() {
                         step="any"
                         value={farmForm.lon}
                         onChange={(e) => setFarmForm({ ...farmForm, lon: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 placeholder:text-gray-400 caret-gray-900"
+                        className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                         placeholder="-180 to 180"
                       />
                     </div>
@@ -251,20 +274,21 @@ export default function AdvancedSetupPage() {
                 )}
               </div>
 
-              <div className="mb-4">
-                <label className="block text-gray-800 font-medium mb-2">
+              <div className="mb-4 sm:mb-6">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                   {getTranslation('setup.countryCode', lang)}
                 </label>
                 <input
                   type="text"
                   value={farmForm.country_code}
                   onChange={(e) => setFarmForm({ ...farmForm, country_code: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 placeholder:text-gray-400 caret-gray-900"
+                  className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                  placeholder="e.g., US, IN, ES"
                 />
               </div>
 
-              <div className="mb-4">
-                <label className="block text-gray-800 font-medium mb-2">
+              <div className="mb-4 sm:mb-6">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                   {getTranslation('setup.preferredLanguage', lang)}
                 </label>
                 <select
@@ -273,7 +297,7 @@ export default function AdvancedSetupPage() {
                     setFarmForm({ ...farmForm, preferred_language: e.target.value });
                     setLang(e.target.value as Language);
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 caret-gray-900"
+                  className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                 >
                   <option value="en">English</option>
                   <option value="hi">हिंदी (Hindi)</option>
@@ -285,7 +309,7 @@ export default function AdvancedSetupPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 disabled:bg-gray-400"
+                className="w-full bg-gray-900 text-white py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg font-medium text-sm sm:text-base hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
               >
                 {loading ? getTranslation('common.loading', lang) : getTranslation('common.save', lang)}
               </button>
@@ -293,17 +317,29 @@ export default function AdvancedSetupPage() {
           )}
 
           {step === 'blocks' && (
-            <form onSubmit={handleBlocksSubmit} className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-2xl font-semibold mb-4 text-gray-900">
-                {getTranslation('setup.createBlocks', lang)}
-              </h2>
+            <form onSubmit={handleBlocksSubmit} className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 sm:p-6 md:p-8 mb-4 sm:mb-6">
+              <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+                <div className="p-1.5 sm:p-2 rounded-lg bg-green-100">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                  </svg>
+                </div>
+                <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
+                  {getTranslation('setup.createBlocks', lang)}
+                </h2>
+              </div>
 
               {blocks.map((block, index) => (
-                <div key={index} className="mb-6 p-4 border border-gray-200 rounded-md">
-                  <h3 className="font-semibold mb-3 text-gray-900">Block {index + 1}</h3>
+                <div key={index} className="mb-4 sm:mb-6 p-3 sm:p-4 md:p-5 bg-gray-50 border border-gray-200 rounded-lg">
+                  <div className="flex items-center gap-2 mb-3 sm:mb-4">
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-gray-200 flex items-center justify-center">
+                      <span className="text-xs sm:text-sm font-semibold text-gray-700">{index + 1}</span>
+                    </div>
+                    <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Block {index + 1}</h3>
+                  </div>
 
-                  <div className="mb-3">
-                    <label className="block text-gray-800 font-medium mb-1">
+                  <div className="mb-3 sm:mb-4">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                       {getTranslation('setup.blockName', lang)} *
                     </label>
                     <input
@@ -311,56 +347,61 @@ export default function AdvancedSetupPage() {
                       required
                       value={block.name}
                       onChange={(e) => updateBlock(index, 'name', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 placeholder:text-gray-400 caret-gray-900"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                      placeholder="Enter block name"
                     />
                   </div>
 
-                  <div className="mb-3">
-                    <label className="block text-gray-800 font-medium mb-1">
+                  <div className="mb-3 sm:mb-4">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                       {getTranslation('setup.variety', lang)}
                     </label>
                     <input
                       type="text"
                       value={block.variety}
                       onChange={(e) => updateBlock(index, 'variety', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 placeholder:text-gray-400 caret-gray-900"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                      placeholder="e.g., Thompson Seedless"
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 mb-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-3 sm:mb-4">
                     <div>
-                      <label className="block text-gray-800 font-medium mb-1">
+                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                         {getTranslation('setup.plantingYear', lang)}
                       </label>
                       <input
                         type="number"
                         value={block.planting_year}
                         onChange={(e) => updateBlock(index, 'planting_year', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 placeholder:text-gray-400 caret-gray-900"
+                        className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                        placeholder="e.g., 2020"
                       />
                     </div>
                     <div>
-                      <label className="block text-gray-800 font-medium mb-1">
+                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                         {getTranslation('setup.soilType', lang)}
                       </label>
                       <input
                         type="text"
                         value={block.soil_type}
                         onChange={(e) => updateBlock(index, 'soil_type', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 placeholder:text-gray-400 caret-gray-900"
+                        className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                        placeholder="e.g., Loam"
                       />
                     </div>
                   </div>
 
-                  <div className="mb-3">
-                    <label className="block text-gray-800 font-medium mb-1">
+                  <div className="mb-3 sm:mb-4">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                       {getTranslation('setup.irrigationType', lang)}
                     </label>
                     <input
                       type="text"
                       value={block.irrigation_type}
                       onChange={(e) => updateBlock(index, 'irrigation_type', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-gray-900 placeholder:text-gray-400 caret-gray-900"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                      placeholder="e.g., Drip irrigation"
                     />
                   </div>
                 </div>
@@ -369,15 +410,18 @@ export default function AdvancedSetupPage() {
               <button
                 type="button"
                 onClick={addBlock}
-                className="mb-4 bg-gray-200 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-300"
+                className="mb-4 sm:mb-6 w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-xs sm:text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
               >
+                <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 inline mr-1.5 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
                 {getTranslation('setup.addBlock', lang)}
               </button>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 disabled:bg-gray-400"
+                className="w-full bg-gray-900 text-white py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg font-medium text-sm sm:text-base hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
               >
                 {loading ? getTranslation('common.loading', lang) : getTranslation('setup.saveAndContinue', lang)}
               </button>
@@ -388,4 +432,3 @@ export default function AdvancedSetupPage() {
     </div>
   );
 }
-

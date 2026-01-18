@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { api, CropStatus } from '@/app/lib/api';
 import { Language, getTranslation } from '@/app/lib/i18n';
-import LanguageToggle from '@/app/components/LanguageToggle';
 import CheckInForm from '@/app/components/CheckInForm';
 
 export default function OnboardingCheckInPage() {
@@ -33,6 +32,15 @@ export default function OnboardingCheckInPage() {
       .then(status => setLatestStatus(status))
       .catch(() => setLatestStatus(null))
       .finally(() => setLoading(false));
+
+    // Listen for language changes from sticky selector
+    const handleLanguageChange = (e: CustomEvent) => {
+      setLang(e.detail.lang);
+    };
+    window.addEventListener('languageChanged', handleLanguageChange as EventListener);
+    return () => {
+      window.removeEventListener('languageChanged', handleLanguageChange as EventListener);
+    };
   }, [router]);
 
   const handleCheckInSuccess = () => {
@@ -54,21 +62,22 @@ export default function OnboardingCheckInPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto p-8 max-w-2xl">
-        <div className="mb-6 flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-gray-800">
-            {getTranslation('onboarding.checkin.title', lang)}
-          </h1>
-          <LanguageToggle currentLang={lang} onLanguageChange={setLang} />
-        </div>
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+        <div className="max-w-2xl mx-auto">
+          <div className="mb-12">
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3 tracking-tight">
+              {getTranslation('onboarding.checkin.title', lang)}
+            </h1>
+          </div>
 
-        <CheckInForm
-          farmId={farmId}
-          latestStatus={latestStatus}
-          lang={lang}
-          onSuccess={handleCheckInSuccess}
-          onboardingMode={true}
-        />
+          <CheckInForm
+            farmId={farmId}
+            latestStatus={latestStatus}
+            lang={lang}
+            onSuccess={handleCheckInSuccess}
+            onboardingMode={true}
+          />
+        </div>
       </div>
     </div>
   );

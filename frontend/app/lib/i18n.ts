@@ -1,8 +1,8 @@
-export type Language = 'en' | 'hi' | 'es' | 'mr';
+export type Language = 'en' | 'hi' | 'es' | 'mr' | 'fr' | 'de' | 'pt' | 'zh' | 'ja' | 'ar';
 
 export const translations: Record<Language, Record<string, string>> = {
   en: {
-    'app.title': 'TableGrape Agent',
+    'app.title': 'AgriSight',
     'setup.title': 'Farm Setup',
     'setup.alreadyHave': 'I already added my farm',
     'setup.continueDashboard': 'Continue to Dashboard',
@@ -143,7 +143,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'dashboard.aiAdvisor.error': 'AI advice not available right now. Showing basic guidance.',
   },
   hi: {
-    'app.title': 'टेबलग्रेप एजेंट',
+    'app.title': 'AgriSight',
     'setup.title': 'फार्म सेटअप',
     'setup.alreadyHave': 'मैंने पहले से अपना फार्म जोड़ दिया है',
     'setup.continueDashboard': 'डैशबोर्ड पर जारी रखें',
@@ -284,7 +284,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'dashboard.aiAdvisor.error': 'AI सलाह अभी उपलब्ध नहीं है। बुनियादी मार्गदर्शन दिखाया जा रहा है।',
   },
   es: {
-    'app.title': 'Agente TableGrape',
+    'app.title': 'AgriSight',
     'setup.title': 'Configuración de Finca',
     'setup.alreadyHave': 'Ya agregué mi finca',
     'setup.continueDashboard': 'Continuar al Panel',
@@ -425,7 +425,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'dashboard.aiAdvisor.error': 'El consejo de IA no está disponible ahora. Mostrando orientación básica.',
   },
   mr: {
-    'app.title': 'टेबलग्रेप एजंट',
+    'app.title': 'AgriSight',
     'setup.title': 'शेत सेटअप',
     'setup.alreadyHave': 'मी आधीच माझे शेत जोडले आहे',
     'setup.continueDashboard': 'डॅशबोर्ड वर जा',
@@ -566,6 +566,19 @@ export const translations: Record<Language, Record<string, string>> = {
     'dashboard.aiAdvisor.error': 'AI सल्ला आत्ता उपलब्ध नाही. मूलभूत मार्गदर्शन दाखवले जात आहे.',
   },
 };
+
+// Helper function to create placeholder translations (using English)
+function createPlaceholderTranslations(enTranslations: Record<string, string>): Record<string, string> {
+  return { ...enTranslations };
+}
+
+// Add placeholder translations for new languages
+(translations as any).fr = createPlaceholderTranslations(translations.en);
+(translations as any).de = createPlaceholderTranslations(translations.en);
+(translations as any).pt = createPlaceholderTranslations(translations.en);
+(translations as any).zh = createPlaceholderTranslations(translations.en);
+(translations as any).ja = createPlaceholderTranslations(translations.en);
+(translations as any).ar = createPlaceholderTranslations(translations.en);
 
 export function getTranslation(key: string, lang: Language): string {
   return translations[lang][key] || translations.en[key] || key;

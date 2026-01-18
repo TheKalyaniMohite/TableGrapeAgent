@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import StickyLanguageSelector from './components/StickyLanguageSelector'
 
 export const metadata: Metadata = {
-  title: 'TableGrape Agent',
-  description: 'Table grape farm management system',
+  title: 'AgriSight - Smart Farm Management',
+  description: 'AgriSight: AI-powered farm management system for modern agriculture',
 }
 
 export default function RootLayout({
@@ -13,9 +14,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className="antialiased">
+        {children}
+        <StickyLanguageSelector />
+      </body>
     </html>
   )
 }
-
-

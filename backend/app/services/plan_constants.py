@@ -22,3 +22,7 @@ SPRAY_DAYS_SINCE = 14  # Days since last spray to consider preventive spray
 ISSUE_FOLLOWUP_DAYS = 3  # Days after issue detection to suggest spray
 
 
+
+
+
+

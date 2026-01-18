@@ -44,3 +44,7 @@ def create_spray_log(log: SprayLogCreate, db: Session = Depends(get_db)):
     return db_log
 
 
+
+
+
+

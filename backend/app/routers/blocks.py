@@ -23,3 +23,7 @@ def get_blocks(farm_id: Optional[str] = Query(None), db: Session = Depends(get_d
     return query.all()
 
 
+
+
+
+
